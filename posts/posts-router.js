@@ -5,14 +5,13 @@ const router = express.Router()
 
 router.post("/", (req, res) => {
     const post = req.body
-    .then (post => {
-        if(!post.title || !post.contents) {
-            return res.status(400).json({
-                errorMessage: "Please provide title and contents for the post."
-            })
-        } else {
-            return res.status(201).json(post)
-        }
+    if(!post.title || !post.contents) {
+        return res.status(400).json({
+            errorMessage: "Please provide title and contents for the post."
+        })
+    }
+    db.insert(post).then (post => {
+      return res.status(201).json(post)
     })
     .catch((err) => {
         console.log(err)
@@ -31,12 +30,14 @@ router.post("/:id/comments", (req, res) => {
             errorMessage: "Please provide text for the comment."
         })
     } else {
-        posts.findPostComments(req.params.id)
-            .then((comments) => {
-                if(comments) {
+        posts.findById(req.params.id)
+            .then((posts) => {
+                if(posts) {
                     posts.insertComment(comment)
-                    return res.status(201).json({
-                    })
+                    .then((commentres) => {
+                        return res.status(201).json(commentres)
+                    }
+                    )
                 } else {
                     res.status(404).json({
                         message: "The post with the specified ID does not exist."
